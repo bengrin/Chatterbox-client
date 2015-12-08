@@ -13,9 +13,25 @@
     <script src="scripts/app.js"></script>
   </head>
   <body>
+  <script>
+  $(function(){
+    app.init();
+  });
+  </script>
     <div id="main">
       <h1>chatterbox</h1>
       <!-- Your HTML goes here! -->
     </div>
+    <div id="rooms">
+      Rooms:
+      <select id="room">
+        
+      </select>
+    </div>
+    <form id='send'>
+      <input type="text" name="message" id="message"></input>
+      <input type="submit" name="submit" id="submit"></input>
+    </form>
+    <div id="chats"></div>
   </body>
 </html>
