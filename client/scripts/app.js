@@ -5,18 +5,20 @@ var app;
 $(function() {
   app = {
     server: 'https://api.parse.com/1/classes/chatterbox',
-    
+    memo: {},
     init: function() {
       app.username = window.location.search.slice(10);
       app.$chats = $('#chats');
       app.$message = $('#message');
-      app.$room = $('#room');
+      app.$room = $('#roomSelect');
       app.fetch();
       $('#send').on('submit', function(){
         app.submit();
         return false;
       })
-      setInterval(app.fetch, 1000)
+      setInterval(app.fetch, 4000)
+      //<embed src="https://www.youtube.com/watch?v=2Z4m4lnjxkY" type="application/x-shockwave-flash" width="640" height="385" autoplay="true"></embed>
+      //<iframe width="100%" height="1000px" src="https://www.youtube.com/embed/DLzxrzFCyOs?rel=0&amp;controls=0&amp;showinfo=0&amp;autoplay=1" frameborder="0" allowfullscreen></iframe>
     },
     send: function(message) {
       $.ajax({
@@ -25,6 +27,7 @@ $(function() {
         data: JSON.stringify(message),
         contentType: 'application/json',
         success: function (data) {
+          console.log(data.roomname);
           console.log('chatterbox: Message sent. Data: ', data);
         },
         error: function (data) {
@@ -43,6 +46,7 @@ $(function() {
           app.clearMessages();
           results = data.results;
           results.forEach(app.addMessage);
+          app.showRoom(results);
         },
         error: function (data) {
           console.error('chatterbox: Failed to send message. Error: ', data);
@@ -62,9 +66,24 @@ $(function() {
       app.$chats.append($chat);
 
     },
-    addRoom: function(){
-      app.$room = $('<option value="selected">Lobby</option')
-      app.$room
+    addRoom:function(roomname){
+        app.$rooms = $('<option></option');
+        app.$rooms.text(roomname);
+        app.$rooms.appendTo(app.$room)
+    },
+    showRoom: function(messages){
+
+      var unique = _.unique(messages, function(data){
+        return data.roomname;
+      })
+
+      _.each(unique, function(room) {
+        if(!app.memo[room.roomname]){
+          app.addRoom(room.roomname);
+          app.memo[room.roomname] = true;
+        }
+      })
+
     },
     submit: function(){
       message = {
@@ -97,6 +116,23 @@ FAxnJLPEUs
 data: 'where={"roomname":"test"}',  
 
 app.send({username: "e11iteHackerSquad", text: "\"})
+
+
+$.ajax({
+  // This is the url you should use to communicate with the parse API server.
+  url: 'https://api.parse.com/1/classes/chatterbox',
+  type: 'GET',
+  data: 'where={"roomname":"5chan"}',  
+//  contentType: 'application/json',
+  success: function (data) {
+    console.log('chatterbox: Message sent. Data: ', data);
+  },
+  error: function (data) {
+    // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
+    console.error('chatterbox: Failed to send message. Error: ', data);
+  }
+});
+
 
 
 */
