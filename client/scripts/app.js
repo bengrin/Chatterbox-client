@@ -6,19 +6,21 @@ $(function() {
   app = {
     server: 'https://api.parse.com/1/classes/chatterbox',
     memo: {},
+    friends: {},
     init: function() {
       app.username = window.location.search.slice(10);
       app.$chats = $('#chats');
       app.$message = $('#message');
-      app.$room = $('#roomSelect');
+      app.$roomSelect = $('#roomSelect');
       app.fetch();
       $('#send').on('submit', function(){
         app.submit();
         return false;
-      })
-      setInterval(app.fetch, 4000)
-      //<embed src="https://www.youtube.com/watch?v=2Z4m4lnjxkY" type="application/x-shockwave-flash" width="640" height="385" autoplay="true"></embed>
-      //<iframe width="100%" height="1000px" src="https://www.youtube.com/embed/DLzxrzFCyOs?rel=0&amp;controls=0&amp;showinfo=0&amp;autoplay=1" frameborder="0" allowfullscreen></iframe>
+      });
+      app.$roomSelect.on('change', app.saveRoom);
+      app.$chats.on('click', '.username', app.addFriend);
+
+      setInterval(app.fetch, 4000);
     },
     send: function(message) {
       $.ajax({
@@ -42,7 +44,7 @@ $(function() {
         data: {"order": "-createdAt"},
         contentType: 'application/json',
         success: function (data) {
-          // console.log(data);
+          //console.log(data);
           app.clearMessages();
           results = data.results;
           results.forEach(app.addMessage);
@@ -52,24 +54,66 @@ $(function() {
           console.error('chatterbox: Failed to send message. Error: ', data);
         }
       });     
-      
     },
     clearMessages: function(){
       app.$chats.children().remove();
     },
     addMessage: function(data){
       $chat = $('<div class="chat"></div>');
-      $username = $('<span class="username"></span>');
+      $username = $('<span class="username"></span>')
+      $username.attr('data-username', data.username);
       $username.text(data.username + ": ").appendTo($chat);
+
       $message = $('<span></span>');
       $message.text(data.text).appendTo($chat);
+      if (app.friends[data.username] === true) {
+        $message.addClass('friend');
+      }
       app.$chats.append($chat);
 
     },
+ 
+    addFriend: function(evt){
+      var username = $(evt.currentTarget).attr('data-username');
+
+      if(username !== undefined){
+        console.log('chatterbox: Adding %s as a friend', username);
+
+        app.friends[username] = true;
+
+         var selector = '[data-username="'+username.replace(/"/g, '\\\"')+'"]';
+         $(selector).addClass('friend');
+
+      }
+    },
+
+
+
     addRoom:function(roomname){
         app.$rooms = $('<option></option');
         app.$rooms.text(roomname);
-        app.$rooms.appendTo(app.$room)
+        app.$rooms.appendTo(app.$roomSelect)
+    },
+    saveRoom: function(evt) {
+
+      var selectIndex = app.$roomSelect.prop('selectedIndex');
+      if (selectIndex === 0) {
+        var roomname = prompt('Enter room name');
+        if (roomname) {
+          app.roomname = roomname;
+
+          app.addRoom(roomname);
+
+          app.$roomSelect.val(roomname);
+
+          app.fetch();
+        }
+      }
+      else {
+        app.roomname = app.$roomSelect.val();
+
+        app.fetch();
+      }
     },
     showRoom: function(messages){
 
@@ -88,7 +132,8 @@ $(function() {
     submit: function(){
       message = {
         username: app.username,
-        text: app.$message.val()
+        text: app.$message.val(),
+        roomname: app.roomname
       };
       app.send(message);
     }
